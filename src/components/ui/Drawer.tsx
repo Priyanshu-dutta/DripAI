@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { X } from 'lucide-react';
 
 export interface DrawerProps {
   isOpen: boolean;
@@ -8,14 +9,26 @@ export interface DrawerProps {
 }
 
 /**
- * Slide-out bottom/side panel container representing the Trial Closet display tray.
+ * Slide-out drawer representing the side workspace view.
  */
 export const Drawer: React.FC<DrawerProps> = ({
   isOpen,
   onClose,
-  title,
+  title = 'Workspace Workspace',
   children
 }) => {
+  // Prevent background scrolling when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -23,7 +36,9 @@ export const Drawer: React.FC<DrawerProps> = ({
       <div className="drawer-container" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-header">
           <h3>{title}</h3>
-          <button onClick={onClose} className="drawer-close-btn">&times;</button>
+          <button onClick={onClose} className="drawer-close-btn" aria-label="Close drawer">
+            <X size={20} />
+          </button>
         </div>
         <div className="drawer-body">
           {children}

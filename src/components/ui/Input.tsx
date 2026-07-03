@@ -1,16 +1,21 @@
 import React from 'react';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+}
 
 /**
- * Reusable Input text box aligned with clean typography design tokens.
+ * Premium design Input box for form options.
  */
-export const Input: React.FC<InputProps> = ({ className = '', ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, className = '', ...props }) => {
   return (
-    <input
-      className={`input-base ${className}`}
-      {...props}
-    />
+    <div className="option-field">
+      {label && <label>{label}</label>}
+      <input
+        className={`interactiveInput ${className}`}
+        {...props}
+      />
+    </div>
   );
 };
 export default Input;
