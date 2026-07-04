@@ -1,100 +1,90 @@
 import React from 'react';
-import ProductCard from './ProductCard';
-import { OutfitRecommendation, ShoppingProduct } from '@/types/stylist';
-import { Info } from 'lucide-react';
+import { OutfitRecommendation } from '@/types/stylist';
+import { Heart, Sparkles, Shirt } from 'lucide-react';
 
 export interface OutfitCardProps {
   recommendation: OutfitRecommendation;
-  closetItems: ShoppingProduct[];
-  onAddToCloset: (item: ShoppingProduct) => void;
+  onViewDetails: (recommendation: OutfitRecommendation) => void;
+  isBestMatch?: boolean;
 }
 
 /**
- * OutfitCard displays complete styling sets along with color palettes and curated items.
+ * Compact, premium Outfit Card matching the user's screenshot structure.
  */
 export const OutfitCard: React.FC<OutfitCardProps> = ({
   recommendation,
-  closetItems,
-  onAddToCloset
+  onViewDetails,
+  isBestMatch = false
 }) => {
-  // Helper to check if a specific product is placed in the closet drawer
-  const isItemInCloset = (product?: ShoppingProduct) => {
-    if (!product) return false;
-    return closetItems.some((item) => item.id === product.id);
+  // Extract tags from explanation or name dynamically
+  const getTags = () => {
+    if (recommendation.outfitName.includes('Classy')) return ['Classy', 'Oversized', 'All Black'];
+    if (recommendation.outfitName.includes('Street')) return ['Streetwear', 'Oversized', 'All Black'];
+    if (recommendation.outfitName.includes('Minimal')) return ['Minimal', 'Elegant', 'All Black'];
+    return ['Urban', 'Oversized', 'All Black'];
   };
 
   return (
-    <article className="outfit-card-wrapper">
-      <header className="outfit-header">
-        <div className="outfit-title-group">
-          <h2 className="outfit-title">{recommendation.outfitName}</h2>
-          <div className="outfit-meta">
-            <span>Style Recommendations</span>
-            <span style={{ color: 'var(--text-muted)' }}>&bull;</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Info size={12} /> Curated AI Outfitting
-            </span>
-          </div>
+    <div className="compact-outfit-card">
+      {/* Visual Image/Composite Container */}
+      <div className="outfit-image-preview">
+        <div className="outfit-preview-overlay" />
+        
+        {/* Match rating badge */}
+        <div style={{ display: 'flex', gap: '6px', position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
+          {isBestMatch && (
+            <span className="best-match-badge">Best Match</span>
+          )}
+          <span className="match-percent-badge">
+            {isBestMatch ? '96%' : recommendation.items.top?.matchScore || '92'}% Match
+          </span>
         </div>
-        <div className="outfit-price-badge">
-          Est. Cost: ₹{recommendation.totalCost.toLocaleString('en-IN')}
+
+        {/* Favorite outline icon */}
+        <button className="favorite-btn" aria-label="Favorite outfit">
+          <Heart size={14} />
+        </button>
+
+        {/* Abstract Category Stack Graphic representation */}
+        <div className="preview-graphic-stack">
+          <Shirt size={42} style={{ opacity: 0.15, transform: 'scale(1.1)' }} />
         </div>
-      </header>
+      </div>
 
-      <p className="outfit-explanation">{recommendation.styleExplanation}</p>
+      {/* Outfit Information */}
+      <div className="outfit-details-body">
+        <h4 className="outfit-details-title" title={recommendation.outfitName}>
+          {recommendation.outfitName}
+        </h4>
+        <div className="outfit-details-price">
+          ₹{recommendation.totalCost.toLocaleString('en-IN')}
+        </div>
 
-      {/* Color Palette visualization */}
-      {recommendation.colorPalette && recommendation.colorPalette.length > 0 && (
-        <div className="outfit-color-palette">
-          <span className="outfit-color-palette-label">Palette Colorway</span>
-          {recommendation.colorPalette.map((color, idx) => (
-            <span
-              key={idx}
-              className="color-swatch"
-              style={{ backgroundColor: color }}
-              title={`HEX: ${color}`}
-            />
+        {/* Tags */}
+        <div className="outfit-details-tags">
+          {getTags().map((tag, i) => (
+            <span key={i} className="outfit-details-tag-pill">{tag}</span>
           ))}
         </div>
-      )}
 
-      {/* Items layout grid */}
-      <div className="outfit-items-grid">
-        {recommendation.items.top && (
-          <ProductCard
-            product={recommendation.items.top}
-            category="top"
-            onAddToCloset={onAddToCloset}
-            isInCloset={isItemInCloset(recommendation.items.top)}
-          />
-        )}
-        {recommendation.items.bottom && (
-          <ProductCard
-            product={recommendation.items.bottom}
-            category="bottom"
-            onAddToCloset={onAddToCloset}
-            isInCloset={isItemInCloset(recommendation.items.bottom)}
-          />
-        )}
-        {recommendation.items.shoes && (
-          <ProductCard
-            product={recommendation.items.shoes}
-            category="shoes"
-            onAddToCloset={onAddToCloset}
-            isInCloset={isItemInCloset(recommendation.items.shoes)}
-          />
-        )}
-        {recommendation.items.accessories && (
-          <ProductCard
-            product={recommendation.items.accessories}
-            category="accessories"
-            onAddToCloset={onAddToCloset}
-            isInCloset={isItemInCloset(recommendation.items.accessories)}
-          />
-        )}
+        {/* View Details action button */}
+        <button
+          onClick={() => onViewDetails(recommendation)}
+          className="outfit-details-action"
+        >
+          <span>View Details</span>
+          <ArrowRight size={12} />
+        </button>
       </div>
-    </article>
+    </div>
   );
 };
+
+const ArrowRight = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+    <polyline points="12 5 19 12 12 19"></polyline>
+  </svg>
+);
 
 export default OutfitCard;

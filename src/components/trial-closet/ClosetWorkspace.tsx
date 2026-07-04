@@ -1,42 +1,36 @@
 import React from 'react';
 import { ShoppingProduct } from '@/types/stylist';
-import { Maximize2, Trash2, X, Shirt } from 'lucide-react';
+import { Maximize2, X, Shirt } from 'lucide-react';
 
 export interface ClosetWorkspaceProps {
   items: ShoppingProduct[];
   onRemoveItem: (productId: string) => void;
   onClearCloset: () => void;
+  onAddAllToCloset?: () => void; // Optional trigger to load all recommended outfit items
 }
 
 /**
- * World-class Closet Workspace panel matching screenshot layout.
+ * World-class Trial Closet Workspace panel matching screenshot layout.
  */
 export const ClosetWorkspace: React.FC<ClosetWorkspaceProps> = ({
   items,
   onRemoveItem,
-  onClearCloset
+  onClearCloset,
+  onAddAllToCloset
 }) => {
   const totalPrice = items.reduce((acc, curr) => acc + curr.price, 0);
 
   return (
     <div className="closet-workspace-container">
       <div className="closet-header">
-        <h3>Trial Closet</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {items.length > 0 && (
-            <button onClick={onClearCloset} className="closet-clear-btn" aria-label="Clear closet">
-              <Trash2 size={14} />
-            </button>
-          )}
-          <button className="closet-clear-btn" style={{ cursor: 'pointer' }} aria-label="Expand closet">
-            <Maximize2 size={14} />
-          </button>
-        </div>
+        <h3>Your Trial Closet</h3>
+        <button className="closet-clear-btn" style={{ cursor: 'pointer' }} aria-label="Expand closet">
+          <Maximize2 size={14} />
+        </button>
       </div>
 
       {items.length === 0 ? (
         <div className="closet-empty-state">
-          {/* Glowing hanger wrapper circle */}
           <div style={{
             width: '46px',
             height: '46px',
@@ -85,11 +79,32 @@ export const ClosetWorkspace: React.FC<ClosetWorkspaceProps> = ({
         </div>
       )}
 
-      <div className="closet-footer">
-        <span className="closet-total-label">Total Outfit Cost</span>
+      {/* Closet footer cost indicators */}
+      <div className="closet-footer" style={{ borderBottom: '1px solid var(--border-primary)', paddingBottom: '12px', marginBottom: '14px' }}>
+        <span className="closet-total-label">Total Estimated Cost</span>
         <span className="closet-total-price" style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
           ₹{totalPrice.toLocaleString('en-IN')}
         </span>
+      </div>
+
+      {/* Bottom Action buttons matching screenshot */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
+          onClick={onAddAllToCloset}
+          className="prompt-submit-btn drip-submit-gradient"
+          style={{ width: '100%', justifyContent: 'center', fontSize: '0.8rem', padding: '10px' }}
+        >
+          Add All to Closet
+        </button>
+        {items.length > 0 && (
+          <button
+            onClick={onClearCloset}
+            className="edit-brief-btn"
+            style={{ width: '100%', fontSize: '0.8rem', padding: '8px' }}
+          >
+            Clear All
+          </button>
+        )}
       </div>
     </div>
   );
