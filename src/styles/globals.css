@@ -207,7 +207,7 @@ a {
  * ----------------------------------------------------------------------------- */
 .workspace-main {
   min-height: 100vh;
-  padding-top: 120px;
+  padding-top: 80px;
   padding-bottom: 80px;
   max-width: 1200px;
   margin: 0 auto;
@@ -217,7 +217,7 @@ a {
 
 .hero-section {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 16px;
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -231,7 +231,7 @@ a {
   font-weight: 500;
   padding: 4px 12px;
   border-radius: 100px;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 8px;
   letter-spacing: -0.01em;
   gap: 6px;
   transition: var(--transition-fast);
@@ -286,8 +286,8 @@ a {
   box-shadow: var(--glass-glow), 0 0 100px -20px var(--glow-indigo);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
   margin-bottom: var(--spacing-md);
   transition: var(--transition-spring);
   position: relative;
@@ -324,12 +324,12 @@ a {
 
 .prompt-textarea {
   width: 100%;
-  min-height: 90px;
+  min-height: 42px;
   background: transparent;
   border: none;
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 1.1rem;
+  font-size: 1rem;
   resize: none;
   outline: none;
   line-height: 1.5;
@@ -482,7 +482,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 18px;
 }
 
 .suggestion-tag {
@@ -558,44 +558,78 @@ a {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-lg);
+  width: 100%;
 }
 
-.brief-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+@media (min-width: 1024px) {
+  .workspace-grid {
+    grid-template-columns: 7.3fr 2.7fr;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
 }
 
-.middle-panel {
+.main-content-column {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  min-width: 0;
+}
+
+.results-split-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .results-split-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.brief-aside-box {
+  width: 100%;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .brief-aside-box {
+    width: 240px;
+    position: sticky;
+    top: 92px;
+  }
+}
+
+.results-main-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-width: 0;
 }
 
 .right-panel {
   display: none;
   flex-direction: column;
   position: relative;
+  gap: var(--spacing-md);
 }
 
-@media (min-width: 1200px) {
-  .workspace-grid {
-    grid-template-columns: 0.85fr 2.3fr 0.85fr;
-  }
+@media (min-width: 1024px) {
   .right-panel {
     display: flex;
+    position: sticky;
+    top: 92px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-bottom: 24px;
+    scrollbar-width: none; /* Firefox */
   }
-}
-
-@media (min-width: 1024px) and (max-width: 1199px) {
-  .workspace-grid {
-    grid-template-columns: 1.30fr 0.70fr;
-  }
-  .brief-panel {
-    display: none; /* Hide brief panel on medium widths to prevent grid crowding */
-  }
-  .right-panel {
-    display: flex;
+  .right-panel::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
   }
 }
 
@@ -1798,4 +1832,326 @@ a {
     left: 16px !important;
     bottom: 16px !important;
   }
+}
+
+/* -----------------------------------------------------------------------------
+ * 18. Phase 2.5 UI Polish Additions
+ * ----------------------------------------------------------------------------- */
+
+/* Active Highlight on Outfit Card */
+.compact-outfit-card.active {
+  border-color: #a855f7 !important;
+  box-shadow: var(--glass-glow), 0 0 25px rgba(168, 85, 247, 0.2) !important;
+  transform: translateY(-2px);
+}
+
+/* Sidebar Custom Widgets */
+.sidebar-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-glow);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  transition: var(--transition-spring);
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-card:hover {
+  border-color: var(--border-secondary);
+}
+
+.sidebar-card-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.sidebar-trend-tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  border-radius: 100px;
+  transition: var(--transition-fast);
+  cursor: default;
+}
+
+.sidebar-trend-tag:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-quote {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-style: italic;
+  opacity: 0.85;
+  border-left: 2px solid #a855f7;
+  padding-left: 12px;
+}
+
+.sidebar-quote-author {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-align: right;
+  font-style: normal;
+  display: block;
+}
+
+/* Allocation Bar Graphics */
+.allocation-bar-container {
+  display: flex;
+  height: 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  width: 100%;
+  margin-top: 6px;
+}
+
+.allocation-segment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.allocation-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Styling criteria items in Right Panel summary card */
+.sidebar-criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-criteria-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-criteria-row:last-child {
+  border-bottom: none;
+}
+
+.sidebar-bullet-list {
+  padding-left: 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-bullet-list li {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.sidebar-palette-swatch-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sidebar-palette-swatch-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Exploration Dashboard (Empty State Layout Refinement) */
+.exploration-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-lg);
+  width: 100%;
+  margin-top: var(--spacing-xs);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@media (min-width: 992px) {
+  .exploration-dashboard {
+    grid-template-columns: 1.25fr 0.75fr;
+  }
+}
+
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.dashboard-section h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+.dashboard-grid-layout.style-starters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+}
+
+@media (min-width: 640px) {
+  .dashboard-grid-layout.style-starters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Curated Style Starter Cards */
+.starter-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-glow);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: var(--transition-spring);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.starter-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.starter-card:hover {
+  border-color: var(--border-focus);
+  transform: translateY(-2px);
+  box-shadow: var(--glass-glow), 0 8px 24px rgba(168, 85, 247, 0.08);
+}
+
+.starter-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.starter-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.starter-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+/* Trend Heatmap Visualizers */
+.heatmap-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-glow);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: var(--transition-spring);
+}
+
+.heatmap-card:hover {
+  border-color: var(--border-secondary);
+}
+
+.trend-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trend-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.trend-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.trend-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #a855f7 0%, #3b82f6 100%);
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
 }

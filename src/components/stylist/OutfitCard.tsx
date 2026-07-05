@@ -6,6 +6,8 @@ export interface OutfitCardProps {
   recommendation: OutfitRecommendation;
   onViewDetails: (recommendation: OutfitRecommendation) => void;
   isBestMatch?: boolean;
+  isActive?: boolean; // Track if the card is highlighted/active
+  onSelect?: () => void; // Trigger callback on card selection
 }
 
 /**
@@ -14,18 +16,33 @@ export interface OutfitCardProps {
 export const OutfitCard: React.FC<OutfitCardProps> = ({
   recommendation,
   onViewDetails,
-  isBestMatch = false
+  isBestMatch = false,
+  isActive = false,
+  onSelect
 }) => {
   // Extract tags from explanation or name dynamically
   const getTags = () => {
-    if (recommendation.outfitName.includes('Classy')) return ['Classy', 'Oversized', 'All Black'];
-    if (recommendation.outfitName.includes('Street')) return ['Streetwear', 'Oversized', 'All Black'];
-    if (recommendation.outfitName.includes('Minimal')) return ['Minimal', 'Elegant', 'All Black'];
+    if (recommendation.outfitName.toLowerCase().includes('classy')) return ['Classy', 'Oversized', 'All Black'];
+    if (recommendation.outfitName.toLowerCase().includes('street')) return ['Streetwear', 'Oversized', 'All Black'];
+    if (recommendation.outfitName.toLowerCase().includes('minimal')) return ['Minimal', 'Elegant', 'All Black'];
     return ['Urban', 'Oversized', 'All Black'];
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Only select if they didn't click the primary action button
+    const target = e.target as HTMLElement;
+    if (target.closest('.outfit-details-action') || target.closest('.favorite-btn')) {
+      return;
+    }
+    if (onSelect) onSelect();
+  };
+
   return (
-    <div className="compact-outfit-card">
+    <div 
+      className={`compact-outfit-card ${isActive ? 'active' : ''}`}
+      onClick={handleCardClick}
+      style={{ cursor: onSelect ? 'pointer' : 'default', border: isActive ? '1px solid #a855f7' : '1px solid var(--glass-border)' }}
+    >
       {/* Visual Image/Composite Container */}
       <div className="outfit-image-preview">
         <div className="outfit-preview-overlay" />
@@ -69,7 +86,10 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
 
         {/* View Details action button */}
         <button
-          onClick={() => onViewDetails(recommendation)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDetails(recommendation);
+          }}
           className="outfit-details-action"
         >
           <span>View Details</span>
