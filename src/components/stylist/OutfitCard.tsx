@@ -8,6 +8,8 @@ export interface OutfitCardProps {
   isBestMatch?: boolean;
   isActive?: boolean; // Track if the card is highlighted/active
   onSelect?: () => void; // Trigger callback on card selection
+  onSave?: (recommendation: OutfitRecommendation) => void;
+  isSaved?: boolean;
 }
 
 /**
@@ -18,7 +20,9 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
   onViewDetails,
   isBestMatch = false,
   isActive = false,
-  onSelect
+  onSelect,
+  onSave,
+  isSaved = false
 }) => {
   // Extract tags from explanation or name dynamically
   const getTags = () => {
@@ -35,6 +39,11 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
       return;
     }
     if (onSelect) onSelect();
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onSave) onSave(recommendation);
   };
 
   return (
@@ -58,8 +67,18 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         </div>
 
         {/* Favorite outline icon */}
-        <button className="favorite-btn" aria-label="Favorite outfit">
-          <Heart size={14} />
+        <button 
+          className="favorite-btn" 
+          onClick={handleFavoriteClick}
+          aria-label="Favorite outfit"
+          style={{
+            color: isSaved ? '#ff4f79' : 'rgba(255, 255, 255, 0.6)',
+            background: isSaved ? 'rgba(255, 79, 121, 0.15)' : 'rgba(0, 0, 0, 0.4)',
+            border: isSaved ? '1px solid rgba(255, 79, 121, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+            transform: isSaved ? 'scale(1.1)' : 'scale(1)'
+          }}
+        >
+          <Heart size={14} fill={isSaved ? '#ff4f79' : 'none'} />
         </button>
 
         {/* Abstract Category Stack Graphic representation */}
