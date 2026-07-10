@@ -88,13 +88,35 @@ export class StyleIntelligenceEngine {
     products: IntelligenceProduct[],
     blueprint: StyleBlueprint
   ): IntelligenceProduct[] {
-    if (!blueprint.gender) return products;
+    // Define non-fashion blacklisted keywords for accessories
+    const accessoryBlacklist = [
+      'cable', 'connector', 'adapter', 'rs232', 'db9', 'usb', 'charger', 'vga', 
+      'hdmi', 'ethernet', 'router', 'switch', 'electronic', 'hard drive', 'ram', 
+      'memory card', 'screw', 'tools', 'automotive', 'car accessory', 'phone case',
+      'protective case', 'screen protector', 'tempered glass', 'cables', 'adapters',
+      'plug', 'socket', 'wire', 'converters', 'converter', 'solder', 'serial'
+    ];
 
-    const bpGender = blueprint.gender.toLowerCase();
+    const bpGender = blueprint.gender ? blueprint.gender.toLowerCase() : '';
     const isMaleQuery = bpGender.includes('men') || bpGender.includes('male') || bpGender === 'man';
     const isFemaleQuery = bpGender.includes('women') || bpGender.includes('female') || bpGender === 'woman';
 
     return products.filter((p) => {
+      // 1. Must be available in stock
+      if (p.availability === false) return false;
+
+      // 2. Accessories non-fashion electronics safeguard
+      if (p.category === 'accessories') {
+        const titleLower = p.title.toLowerCase();
+        const brandLower = p.brand.toLowerCase();
+        const hasBlacklistedWord = accessoryBlacklist.some(word => 
+          titleLower.includes(word) || brandLower.includes(word)
+        );
+        if (hasBlacklistedWord) return false;
+      }
+
+      // 3. Gender target filter
+      if (!bpGender) return true;
       if (p.gender === 'unisex') return true;
       if (isMaleQuery) return p.gender === 'men';
       if (isFemaleQuery) return p.gender === 'women';

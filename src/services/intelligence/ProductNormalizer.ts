@@ -24,17 +24,60 @@ export class ProductNormalizer {
       category = 'shoes';
     }
 
-    // Normalize color names (handling spelling variations and standardizing to lowercase)
-    const rawColor = (raw.color || raw.colour || raw.shade || 'unknown').toLowerCase().trim();
+    // Title context parsing if fields are default or unknown to ensure high match fidelity
+    const titleLower = title.toLowerCase();
+
+    // 1. Color Extraction
+    let rawColor = (raw.color || raw.colour || raw.shade || '').toLowerCase().trim();
+    if (!rawColor || rawColor === 'unknown') {
+      const colors = [
+        'black', 'white', 'grey', 'gray', 'beige', 'cream', 'blue', 'navy', 
+        'green', 'olive', 'brown', 'tan', 'red', 'burgundy', 'pink', 
+        'yellow', 'orange', 'purple', 'silver', 'gold'
+      ];
+      const foundColor = colors.find(c => titleLower.includes(c));
+      rawColor = foundColor ? foundColor : 'unknown';
+    }
     const color = this.canonicalColor(rawColor);
 
-    // Normalize style, fit, and season to canonical lowercase formats
-    const style = (raw.style || raw.styleVibe || 'casual').toLowerCase().trim();
-    const fit = (raw.fit || raw.fitType || 'regular').toLowerCase().trim();
+    // 2. Fit Extraction
+    let fit = (raw.fit || raw.fitType || '').toLowerCase().trim();
+    if (!fit || fit === 'regular') {
+      if (titleLower.includes('oversized') || titleLower.includes('baggy') || titleLower.includes('loose') || titleLower.includes('relaxed')) {
+        fit = 'oversized';
+      } else if (titleLower.includes('slim') || titleLower.includes('tight') || titleLower.includes('skinny') || titleLower.includes('tapered')) {
+        fit = 'slim';
+      } else {
+        fit = 'regular';
+      }
+    }
+
+    // 3. Style Extraction
+    let style = (raw.style || raw.styleVibe || '').toLowerCase().trim();
+    if (!style || style === 'casual') {
+      if (titleLower.includes('formal') || titleLower.includes('suit') || titleLower.includes('office') || titleLower.includes('classic') || titleLower.includes('classy') || titleLower.includes('trousers') || titleLower.includes('blazer')) {
+        style = 'formal';
+      } else if (titleLower.includes('streetwear') || titleLower.includes('street') || titleLower.includes('hoodie') || titleLower.includes('sport') || titleLower.includes('cargo') || titleLower.includes('sneaker')) {
+        style = 'casual';
+      } else {
+        style = 'casual';
+      }
+    }
+
+    // 4. Season Extraction
     const season = (raw.season || raw.seasonName || 'all-season').toLowerCase().trim();
 
-    // Standardize gender target
-    const rawGender = (raw.gender || raw.genderTarget || 'unisex').toLowerCase().trim();
+    // 5. Gender Target Extraction
+    let rawGender = (raw.gender || raw.genderTarget || '').toLowerCase().trim();
+    if (!rawGender || rawGender === 'unisex') {
+      if (titleLower.includes('men') || titleLower.includes('man') || titleLower.includes('male') || titleLower.includes('boy')) {
+        rawGender = 'men';
+      } else if (titleLower.includes('women') || titleLower.includes('woman') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies')) {
+        rawGender = 'women';
+      } else {
+        rawGender = 'unisex';
+      }
+    }
     let gender: 'men' | 'women' | 'unisex' = 'unisex';
     if (rawGender.includes('men') || rawGender.includes('male') || rawGender === 'man') {
       gender = 'men';
@@ -42,9 +85,32 @@ export class ProductNormalizer {
       gender = 'women';
     }
 
-    // Process and normalize occasion tags
+    // 6. Occasion Tags Extraction
     const rawTags = raw.occasionTags || raw.tags || [];
     const occasionTags = rawTags.map((tag) => tag.toLowerCase().trim());
+    if (occasionTags.length === 0) {
+      if (titleLower.includes('formal') || titleLower.includes('office') || titleLower.includes('interview')) {
+        occasionTags.push('formal');
+      }
+      if (titleLower.includes('casual') || titleLower.includes('daily') || titleLower.includes('weekend')) {
+        occasionTags.push('casual');
+      }
+      if (titleLower.includes('party') || titleLower.includes('night') || titleLower.includes('club')) {
+        occasionTags.push('party');
+      }
+      if (titleLower.includes('date') || titleLower.includes('romantic')) {
+        occasionTags.push('date');
+      }
+      if (titleLower.includes('sport') || titleLower.includes('gym') || titleLower.includes('running') || titleLower.includes('active')) {
+        occasionTags.push('sports');
+      }
+      if (titleLower.includes('summer') || titleLower.includes('beach') || titleLower.includes('sun')) {
+        occasionTags.push('summer');
+      }
+      if (titleLower.includes('winter') || titleLower.includes('snow') || titleLower.includes('cold')) {
+        occasionTags.push('winter');
+      }
+    }
 
     // Validate numbers
     const price = typeof raw.price === 'number' ? raw.price : (typeof raw.cost === 'number' ? raw.cost : 0);

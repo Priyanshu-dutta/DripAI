@@ -39,7 +39,7 @@ export class SearchQueryBuilder {
     } else if (category === 'shoes') {
       terms.push('shoes');
     } else {
-      terms.push('accessories');
+      terms.push('fashion accessories');
     }
 
     return terms.join(' ').trim();
