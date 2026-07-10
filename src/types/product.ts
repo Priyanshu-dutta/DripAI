@@ -36,6 +36,7 @@ export interface RawProviderProduct {
   retailerUrl?: string;
   ratingScore?: number;
   rating?: number;
+  availability?: boolean | string;
 }
 
 /**
@@ -58,6 +59,13 @@ export interface IntelligenceProduct {
   retailer: string;
   retailerUrl: string;
   rating: number; // 0.0 - 5.0
+  availability: boolean; // True if item is in stock
+  alternateOffers?: {
+    retailer: string;
+    price: number;
+    currency: string;
+    retailerUrl: string;
+  }[];
 }
 
 /**

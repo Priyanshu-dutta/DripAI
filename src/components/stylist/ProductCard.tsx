@@ -34,10 +34,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className="product-card-wrapper">
-      <div className="product-image-container">
-        <div className="product-mock-image-glow" />
-        {getCategoryIcon()}
-        <span className="product-match-badge">{product.matchScore}% match</span>
+      <div className="product-image-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+        {product.imageUrl ? (
+          <img 
+            src={product.imageUrl} 
+            alt={product.title} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }}
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
+        ) : null}
+        <div className="product-mock-image-glow" style={{ zIndex: 1 }} />
+        {!product.imageUrl && getCategoryIcon()}
+        <span className="product-match-badge" style={{ zIndex: 2 }}>{product.matchScore}% match</span>
       </div>
 
       <div className="product-info">

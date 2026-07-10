@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
     const blueprint = await GeminiService.extractPreferences(sanitizedPrompt, requestId);
 
     // 4. Invoke Style Intelligence Engine
-    const { LocalProductProvider } = await import('../../../../services/intelligence/providers/LocalProductProvider');
+    const { ProductProviderFactory } = await import('../../../../services/intelligence/providers/ProductProviderFactory');
     const { StyleIntelligenceEngine } = await import('../../../../services/intelligence/StyleIntelligenceEngine');
     
-    const productRepository = new LocalProductProvider();
+    const productRepository = ProductProviderFactory.getProvider(blueprint);
     const recommendations = await StyleIntelligenceEngine.generateRecommendations(
       blueprint,
       productRepository,

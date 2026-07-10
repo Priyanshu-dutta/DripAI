@@ -25,4 +25,40 @@ export class EnvConfig {
   public static getGeminiModel(): string {
     return process.env.GEMINI_MODEL || 'gemini-1.5-flash';
   }
+
+  /**
+   * Retrieves the Serper API Key.
+   * Returns null if not defined or set to the default placeholder.
+   */
+  public static getSerperApiKey(): string | null {
+    const key = process.env.SERPER_API_KEY;
+    if (!key || key === 'your_serper_api_key_here') {
+      return null;
+    }
+    return key;
+  }
+
+  /**
+   * Retrieves the active product provider identifier.
+   * Defaults to 'local'. Options are: 'local' | 'searchapi' | 'affiliate' | 'retail'.
+   */
+  public static getActiveProductProvider(): string {
+    return process.env.ACTIVE_PRODUCT_PROVIDER || 'local';
+  }
+
+  /**
+   * Retrieves the active search adapter identifier.
+   * Defaults to 'serper'. Options are: 'serper' | 'valueserp' | 'serpapi'.
+   */
+  public static getActiveSearchAdapter(): string {
+    return process.env.ACTIVE_SEARCH_ADAPTER || 'serper';
+  }
+
+  /**
+   * Retrieves the active cache provider.
+   * Defaults to 'memory'. Options are: 'memory' | 'redis'.
+   */
+  public static getActiveCacheProvider(): string {
+    return process.env.ACTIVE_CACHE_PROVIDER || 'memory';
+  }
 }

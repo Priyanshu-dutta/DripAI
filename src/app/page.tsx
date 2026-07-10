@@ -96,10 +96,10 @@ function mapRecommendationsToUI(recs: any, blueprint: any): OutfitRecommendation
     });
   };
 
-  const styleName = blueprint.style
+  const styleName = blueprint.style && blueprint.style !== 'null' && blueprint.style !== 'UNKNOWN' && blueprint.style.trim() !== ''
     ? blueprint.style.charAt(0).toUpperCase() + blueprint.style.slice(1)
     : 'Coordinated';
-  const fitName = blueprint.fit
+  const fitName = blueprint.fit && blueprint.fit !== 'null' && blueprint.fit !== 'UNKNOWN' && blueprint.fit.trim() !== ''
     ? blueprint.fit.charAt(0).toUpperCase() + blueprint.fit.slice(1)
     : 'Standard';
 
@@ -349,6 +349,38 @@ function WorkspacePageContent() {
     return history.some(
       (h) => h.outfit_name === rec.outfitName && Number(h.total_cost) === rec.totalCost
     );
+  };
+
+  // Dynamically resolve products inside active category tabs
+  const getTabProducts = () => {
+    if (recommendations.length === 0) {
+      return MOCK_TABS[activeTab] || [];
+    }
+
+    const itemsMap: Record<string, ShoppingProduct[]> = {
+      tops: [],
+      bottoms: [],
+      shoes: [],
+      accessories: []
+    };
+
+    recommendations.forEach((rec) => {
+      if (rec.items.top) itemsMap.tops.push(rec.items.top);
+      if (rec.items.bottom) itemsMap.bottoms.push(rec.items.bottom);
+      if (rec.items.shoes) itemsMap.shoes.push(rec.items.shoes);
+      if (rec.items.accessories) itemsMap.accessories.push(rec.items.accessories);
+    });
+
+    const getDeduplicated = (arr: ShoppingProduct[]) => {
+      const seen = new Set<string>();
+      return arr.filter((item) => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+    };
+
+    return getDeduplicated(itemsMap[activeTab === 'bottoms' ? 'bottoms' : activeTab]);
   };
 
   const filteredRecommendations = recommendations.filter((rec) => {
@@ -660,7 +692,7 @@ function WorkspacePageContent() {
                     </div>
 
                     <div className="items-tab-grid">
-                      {MOCK_TABS[activeTab]?.map((prod) => (
+                      {getTabProducts()?.map((prod) => (
                         <ProductCard
                           key={prod.id}
                           product={prod}

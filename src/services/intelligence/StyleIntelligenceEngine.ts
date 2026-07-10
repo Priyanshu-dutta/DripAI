@@ -305,6 +305,7 @@ export class StyleIntelligenceEngine {
       retailer: 'Fallback Store',
       retailerUrl: '#',
       rating: 4.0,
+      availability: true,
     };
   }
 }

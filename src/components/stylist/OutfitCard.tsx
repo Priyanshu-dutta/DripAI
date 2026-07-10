@@ -81,10 +81,58 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
           <Heart size={14} fill={isSaved ? '#ff4f79' : 'none'} />
         </button>
 
-        {/* Abstract Category Stack Graphic representation */}
-        <div className="preview-graphic-stack">
-          <Shirt size={42} style={{ opacity: 0.15, transform: 'scale(1.1)' }} />
-        </div>
+        {/* Render composite 2x2 grid of real product images if available, fallback to icon */}
+        {(() => {
+          const items = recommendation.items;
+          const imageSources = [
+            items.top?.imageUrl,
+            items.bottom?.imageUrl,
+            items.shoes?.imageUrl,
+            items.accessories?.imageUrl
+          ].filter(Boolean);
+
+          if (imageSources.length > 0) {
+            return (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gridTemplateRows: '1fr 1fr',
+                gap: '4px',
+                padding: '8px',
+                background: 'rgba(0, 0, 0, 0.4)'
+              }}>
+                {imageSources.map((src, idx) => (
+                  <img
+                    key={idx}
+                    src={src}
+                    alt="Outfit component"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)'
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div className="preview-graphic-stack">
+              <Shirt size={42} style={{ opacity: 0.15, transform: 'scale(1.1)' }} />
+            </div>
+          );
+        })()}
       </div>
 
       {/* Outfit Information */}

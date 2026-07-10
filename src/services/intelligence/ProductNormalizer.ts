@@ -18,9 +18,9 @@ export class ProductNormalizer {
     let category: 'top' | 'bottom' | 'shoes' | 'accessories' = 'accessories';
     if (rawCategory.includes('top') || rawCategory.includes('shirt') || rawCategory.includes('tshirt') || rawCategory.includes('jacket') || rawCategory.includes('sweater') || rawCategory.includes('outerwear')) {
       category = 'top';
-    } else if (rawCategory.includes('bottom') || rawCategory.includes('pant') || rawCategory.includes('jean') || rawCategory.includes('trouser') || rawCategory.includes('short') || rawCategory.includes('skirt')) {
+    } else if (rawCategory.includes('bottom') || rawCategory.includes('pant') || rawCategory.includes('jean') || rawCategory.includes('trouser') || rawCategory.includes('short') || rawCategory.includes('skirt') || rawCategory.includes('cargo')) {
       category = 'bottom';
-    } else if (rawCategory.includes('shoe') || rawCategory.includes('boot') || rawCategory.includes('sneaker') || rawCategory.includes('sandal') || rawCategory.includes('footwear')) {
+    } else if (rawCategory.includes('shoe') || rawCategory.includes('boot') || rawCategory.includes('sneaker') || rawCategory.includes('sandal') || rawCategory.includes('footwear') || rawCategory.includes('loafer')) {
       category = 'shoes';
     }
 
@@ -57,6 +57,23 @@ export class ProductNormalizer {
     const ratingRaw = typeof raw.rating === 'number' ? raw.rating : (typeof raw.ratingScore === 'number' ? raw.ratingScore : 4.0);
     const rating = Math.max(0, Math.min(5.0, ratingRaw));
 
+    // Normalize availability flag
+    let availability = true;
+    if (raw.availability !== undefined) {
+      if (typeof raw.availability === 'boolean') {
+        availability = raw.availability;
+      } else if (typeof raw.availability === 'string') {
+        const lowerAvail = raw.availability.toLowerCase().trim();
+        availability = lowerAvail === 'in stock' || lowerAvail === 'instock' || lowerAvail === 'true' || lowerAvail === 'available';
+      }
+    } else if ((raw as any).inStock !== undefined) {
+      availability = !!(raw as any).inStock;
+    } else if ((raw as any).stock !== undefined) {
+      if (typeof (raw as any).stock === 'number') {
+        availability = (raw as any).stock > 0;
+      }
+    }
+
     return {
       id,
       title,
@@ -74,29 +91,54 @@ export class ProductNormalizer {
       retailer,
       retailerUrl,
       rating,
+      availability
     };
+  }
+
+  /**
+   * Helper parsing numerical value and currency tag from raw price string values.
+   */
+  public static parsePriceAndCurrency(rawPriceString: string): { price: number; currency: string } {
+    if (!rawPriceString) return { price: 0, currency: 'INR' };
+    
+    let currency = 'INR';
+    if (rawPriceString.includes('$')) {
+      currency = 'USD';
+    } else if (rawPriceString.includes('₹') || rawPriceString.toUpperCase().includes('INR')) {
+      currency = 'INR';
+    } else if (rawPriceString.includes('£')) {
+      currency = 'GBP';
+    } else if (rawPriceString.includes('€')) {
+      currency = 'EUR';
+    }
+
+    const cleaned = rawPriceString.replace(/[^0-9.]/g, '');
+    const price = parseFloat(cleaned) || 0;
+
+    return { price, currency };
   }
 
   /**
    * Standardizes arbitrary shade names into simple, canonical color terms.
    */
   private static canonicalColor(shade: string): string {
-    if (shade.includes('jet black') || shade.includes('midnight black') || shade.includes('charcoal')) {
+    const s = shade.toLowerCase();
+    if (s.includes('jet black') || s.includes('midnight black') || s.includes('charcoal') || s === 'black') {
       return 'black';
     }
-    if (shade.includes('off-white') || shade.includes('ivory') || shade.includes('cream')) {
+    if (s.includes('off-white') || s.includes('ivory') || s.includes('cream') || s === 'white') {
       return 'white';
     }
-    if (shade.includes('navy') || shade.includes('indigo') || shade.includes('sky')) {
+    if (s.includes('navy') || s.includes('indigo') || s.includes('sky') || s === 'blue') {
       return 'blue';
     }
-    if (shade.includes('olive') || shade.includes('forest') || shade.includes('mint')) {
+    if (s.includes('olive') || s.includes('forest') || s.includes('mint') || s === 'green') {
       return 'green';
     }
-    if (shade.includes('maroon') || shade.includes('ruby') || shade.includes('crimson')) {
+    if (s.includes('maroon') || s.includes('ruby') || s.includes('crimson') || s === 'red') {
       return 'red';
     }
-    if (shade.includes('khaki') || shade.includes('beige') || shade.includes('camel') || shade.includes('tan')) {
+    if (s.includes('khaki') || s.includes('beige') || s.includes('camel') || s.includes('tan')) {
       return 'beige';
     }
     return shade;
