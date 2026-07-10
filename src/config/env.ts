@@ -43,7 +43,15 @@ export class EnvConfig {
    * Defaults to 'local'. Options are: 'local' | 'searchapi' | 'affiliate' | 'retail'.
    */
   public static getActiveProductProvider(): string {
-    return process.env.ACTIVE_PRODUCT_PROVIDER || 'local';
+    const provider = process.env.ACTIVE_PRODUCT_PROVIDER;
+    if (provider) return provider;
+
+    // Auto-detect: Use searchapi if Serper API Key is configured, otherwise fallback to local
+    const serperKey = process.env.SERPER_API_KEY;
+    if (serperKey && serperKey !== 'your_serper_api_key_here') {
+      return 'searchapi';
+    }
+    return 'local';
   }
 
   /**
