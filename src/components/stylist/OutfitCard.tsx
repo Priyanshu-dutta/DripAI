@@ -57,14 +57,11 @@ export const OutfitCard: React.FC<OutfitCardProps> = ({
         <div className="outfit-preview-overlay" />
         
         {/* Match rating badge */}
-        <div style={{ display: 'flex', gap: '6px', position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
-          {isBestMatch && (
+        {isBestMatch && (
+          <div style={{ display: 'flex', gap: '6px', position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
             <span className="best-match-badge">Best Match</span>
-          )}
-          <span className="match-percent-badge">
-            {isBestMatch ? '96%' : recommendation.items.top?.matchScore || '92'}% Match
-          </span>
-        </div>
+          </div>
+        )}
 
         {/* Favorite outline icon */}
         <button 

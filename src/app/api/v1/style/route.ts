@@ -30,6 +30,17 @@ export async function POST(request: NextRequest) {
     // 3. Invoke preference extraction service
     const blueprint = await GeminiService.extractPreferences(sanitizedPrompt, requestId);
 
+    // Merge manual UI filters if present in request body to override/supplement AI guesses
+    if (body?.filters) {
+      const f = body.filters;
+      if (f.occasion) blueprint.occasion = f.occasion;
+      if (f.budget) blueprint.budget = f.budget;
+      if (f.style) blueprint.style = f.style;
+      if (f.fit) blueprint.fit = f.fit;
+      if (f.gender) blueprint.gender = f.gender;
+      if (f.season) blueprint.season = f.season;
+    }
+
     // 4. Invoke Style Intelligence Engine
     const { ProductProviderFactory } = await import('../../../../services/intelligence/providers/ProductProviderFactory');
     const { StyleIntelligenceEngine } = await import('../../../../services/intelligence/StyleIntelligenceEngine');

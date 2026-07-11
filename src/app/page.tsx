@@ -200,7 +200,10 @@ function WorkspacePageContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: promptText }),
+        body: JSON.stringify({ 
+          prompt: promptText,
+          filters: filters
+        }),
       });
 
       if (!response.ok) {

@@ -47,7 +47,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         ) : null}
         <div className="product-mock-image-glow" style={{ zIndex: 1 }} />
         {!product.imageUrl && getCategoryIcon()}
-        <span className="product-match-badge" style={{ zIndex: 2 }}>{product.matchScore}% match</span>
       </div>
 
       <div className="product-info">

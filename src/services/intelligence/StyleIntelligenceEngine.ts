@@ -157,29 +157,165 @@ export class StyleIntelligenceEngine {
   /**
    * Combines top-ranked products in each category.
    */
+  /**
+   * Explores the candidate space to resolve a combination of items matching budget constraints.
+   * mode: 'score' (maximize match score compatibility) or 'price' (minimize total price)
+   */
+  private static findCombination(
+    categories: ReturnType<typeof StyleIntelligenceEngine.rankProductsByCategory>,
+    totalBudget: number,
+    mode: 'score' | 'price',
+    excludeIds: Set<string> = new Set()
+  ): {
+    top: IntelligenceProduct;
+    bottom: IntelligenceProduct;
+    shoes: IntelligenceProduct;
+    accessories: IntelligenceProduct;
+    topScore: number;
+    bottomScore: number;
+    shoesScore: number;
+    accessoriesScore: number;
+    totalCost: number;
+    avgScore: number;
+  } {
+    // Limit to top 25 candidates per category for combinatorial search (25^4 is ~390k iterations max, ~10ms execution time)
+    const tops = categories.top.slice(0, 25);
+    const bottoms = categories.bottom.slice(0, 25);
+    const shoess = categories.shoes.slice(0, 25);
+    const accs = categories.accessories.slice(0, 25);
+
+    // Apply exclusion filter, falling back to full category lists if empty
+    const tListFiltered = tops.filter(item => !excludeIds.has(item.product.id));
+    const bListFiltered = bottoms.filter(item => !excludeIds.has(item.product.id));
+    const sListFiltered = shoess.filter(item => !excludeIds.has(item.product.id));
+    const aListFiltered = accs.filter(item => !excludeIds.has(item.product.id));
+
+    const tList = tListFiltered.length > 0 ? tListFiltered : tops;
+    const bList = bListFiltered.length > 0 ? bListFiltered : bottoms;
+    const sList = sListFiltered.length > 0 ? sListFiltered : shoess;
+    const aList = aListFiltered.length > 0 ? aListFiltered : accs;
+
+    // Direct fallbacks if lists are empty
+    const defaultTop = tops[0]?.product || this.getFallbackItem('top');
+    const defaultBottom = bottoms[0]?.product || this.getFallbackItem('bottom');
+    const defaultShoes = shoess[0]?.product || this.getFallbackItem('shoes');
+    const defaultAcc = accs[0]?.product || this.getFallbackItem('accessories');
+
+    const defaultTopScore = tops[0]?.score ?? 50;
+    const defaultBottomScore = bottoms[0]?.score ?? 50;
+    const defaultShoesScore = shoess[0]?.score ?? 50;
+    const defaultAccScore = accs[0]?.score ?? 50;
+
+    const baseResult = {
+      top: defaultTop,
+      bottom: defaultBottom,
+      shoes: defaultShoes,
+      accessories: defaultAcc,
+      topScore: defaultTopScore,
+      bottomScore: defaultBottomScore,
+      shoesScore: defaultShoesScore,
+      accessoriesScore: defaultAccScore,
+      totalCost: defaultTop.price + defaultBottom.price + defaultShoes.price + defaultAcc.price,
+      avgScore: (defaultTopScore + defaultBottomScore + defaultShoesScore + defaultAccScore) / 4
+    };
+
+    const finalTList = tList.length > 0 ? tList : [{ product: defaultTop, score: defaultTopScore }];
+    const finalBList = bList.length > 0 ? bList : [{ product: defaultBottom, score: defaultBottomScore }];
+    const finalSList = sList.length > 0 ? sList : [{ product: defaultShoes, score: defaultShoesScore }];
+    const finalAList = aList.length > 0 ? aList : [{ product: defaultAcc, score: defaultAccScore }];
+
+    let bestMatch: typeof baseResult | null = null;
+    let maxScore = -1;
+    let minPrice = Infinity;
+
+    // Track absolute cheapest option overall as the ultimate fallback
+    let absoluteCheapest: typeof baseResult | null = null;
+    let absoluteMinPrice = Infinity;
+
+    for (const t of finalTList) {
+      for (const b of finalBList) {
+        for (const s of finalSList) {
+          for (const a of finalAList) {
+            const cost = t.product.price + b.product.price + s.product.price + a.product.price;
+            const avgScore = (t.score + b.score + s.score + a.score) / 4;
+
+            const current = {
+              top: t.product,
+              bottom: b.product,
+              shoes: s.product,
+              accessories: a.product,
+              topScore: t.score,
+              bottomScore: b.score,
+              shoesScore: s.score,
+              accessoriesScore: a.score,
+              totalCost: cost,
+              avgScore
+            };
+
+            if (cost < absoluteMinPrice) {
+              absoluteMinPrice = cost;
+              absoluteCheapest = current;
+            }
+
+            if (totalBudget <= 0) {
+              // No budget constraint: maximize compatibility score
+              if (avgScore > maxScore) {
+                maxScore = avgScore;
+                bestMatch = current;
+              }
+            } else if (cost <= totalBudget) {
+              if (mode === 'score') {
+                // Maximize average score within budget
+                if (avgScore > maxScore) {
+                  maxScore = avgScore;
+                  bestMatch = current;
+                }
+              } else {
+                // Minimize price within budget
+                if (cost < minPrice) {
+                  minPrice = cost;
+                  bestMatch = current;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (bestMatch) {
+      return bestMatch;
+    }
+
+    // Fallback: If no combination is within budget, return the cheapest option overall
+    return absoluteCheapest || baseResult;
+  }
+
+  /**
+   * Combines top-ranked products in each category.
+   */
   private static buildBestMatchOutfit(
     categories: ReturnType<typeof StyleIntelligenceEngine.rankProductsByCategory>,
     blueprint: StyleBlueprint,
     totalBudget: number
   ): OutfitDefinition {
-    const top = categories.top[0]?.product || this.getFallbackItem('top');
-    const bottom = categories.bottom[0]?.product || this.getFallbackItem('bottom');
-    const shoes = categories.shoes[0]?.product || this.getFallbackItem('shoes');
-    const accessories = categories.accessories[0]?.product || this.getFallbackItem('accessories');
+    const comb = this.findCombination(categories, totalBudget, 'score');
 
-    const topScore = categories.top[0]?.score ?? 50;
-    const bottomScore = categories.bottom[0]?.score ?? 50;
-    const shoesScore = categories.shoes[0]?.score ?? 50;
-    const accScore = categories.accessories[0]?.score ?? 50;
-
-    const avgScore = (topScore + bottomScore + shoesScore + accScore) / 4;
-
-    return this.createOutfit(top, bottom, shoes, accessories, avgScore, blueprint, totalBudget, {
-      top: topScore,
-      bottom: bottomScore,
-      shoes: shoesScore,
-      accessories: accScore,
-    });
+    return this.createOutfit(
+      comb.top,
+      comb.bottom,
+      comb.shoes,
+      comb.accessories,
+      comb.avgScore,
+      blueprint,
+      totalBudget,
+      {
+        top: comb.topScore,
+        bottom: comb.bottomScore,
+        shoes: comb.shoesScore,
+        accessories: comb.accessoriesScore,
+      }
+    );
   }
 
   /**
@@ -190,30 +326,32 @@ export class StyleIntelligenceEngine {
     blueprint: StyleBlueprint,
     totalBudget: number
   ): OutfitDefinition {
-    // Attempt to pick second rank, fallback to first if catalog is small
-    const topItem = categories.top[1] || categories.top[0];
-    const bottomItem = categories.bottom[1] || categories.bottom[0];
-    const shoesItem = categories.shoes[1] || categories.shoes[0];
-    const accItem = categories.accessories[1] || categories.accessories[0];
+    // Exclude the Best Match items to recommend a distinct coordinate
+    const bestMatchComb = this.findCombination(categories, totalBudget, 'score');
+    const excludeIds = new Set<string>([
+      bestMatchComb.top.id,
+      bestMatchComb.bottom.id,
+      bestMatchComb.shoes.id,
+      bestMatchComb.accessories.id,
+    ]);
 
-    const top = topItem?.product || this.getFallbackItem('top');
-    const bottom = bottomItem?.product || this.getFallbackItem('bottom');
-    const shoes = shoesItem?.product || this.getFallbackItem('shoes');
-    const accessories = accItem?.product || this.getFallbackItem('accessories');
+    const comb = this.findCombination(categories, totalBudget, 'score', excludeIds);
 
-    const topScore = topItem?.score ?? 45;
-    const bottomScore = bottomItem?.score ?? 45;
-    const shoesScore = shoesItem?.score ?? 45;
-    const accScore = accItem?.score ?? 45;
-
-    const avgScore = (topScore + bottomScore + shoesScore + accScore) / 4;
-
-    return this.createOutfit(top, bottom, shoes, accessories, avgScore, blueprint, totalBudget, {
-      top: topScore,
-      bottom: bottomScore,
-      shoes: shoesScore,
-      accessories: accScore,
-    });
+    return this.createOutfit(
+      comb.top,
+      comb.bottom,
+      comb.shoes,
+      comb.accessories,
+      comb.avgScore,
+      blueprint,
+      totalBudget,
+      {
+        top: comb.topScore,
+        bottom: comb.bottomScore,
+        shoes: comb.shoesScore,
+        accessories: comb.accessoriesScore,
+      }
+    );
   }
 
   /**
@@ -224,40 +362,24 @@ export class StyleIntelligenceEngine {
     blueprint: StyleBlueprint,
     totalBudget: number
   ): OutfitDefinition {
-    // Sort catalog by price ascending, keeping only candidates with suitability > 30%
-    const sortByPrice = (list: typeof categories.top) => 
-      [...list]
-        .filter(item => item.score > 30)
-        .sort((a, b) => a.product.price - b.product.price);
+    // Find the cheapest combination within budget
+    const comb = this.findCombination(categories, totalBudget, 'price');
 
-    const priceSortedTops = sortByPrice(categories.top);
-    const priceSortedBottoms = sortByPrice(categories.bottom);
-    const priceSortedShoes = sortByPrice(categories.shoes);
-    const priceSortedAcc = sortByPrice(categories.accessories);
-
-    const topItem = priceSortedTops[0] || categories.top[0];
-    const bottomItem = priceSortedBottoms[0] || categories.bottom[0];
-    const shoesItem = priceSortedShoes[0] || categories.shoes[0];
-    const accItem = priceSortedAcc[0] || categories.accessories[0];
-
-    const top = topItem?.product || this.getFallbackItem('top');
-    const bottom = bottomItem?.product || this.getFallbackItem('bottom');
-    const shoes = shoesItem?.product || this.getFallbackItem('shoes');
-    const accessories = accItem?.product || this.getFallbackItem('accessories');
-
-    const topScore = topItem?.score ?? 40;
-    const bottomScore = bottomItem?.score ?? 40;
-    const shoesScore = shoesItem?.score ?? 40;
-    const accScore = accItem?.score ?? 40;
-
-    const avgScore = (topScore + bottomScore + shoesScore + accScore) / 4;
-
-    return this.createOutfit(top, bottom, shoes, accessories, avgScore, blueprint, totalBudget, {
-      top: topScore,
-      bottom: bottomScore,
-      shoes: shoesScore,
-      accessories: accScore,
-    });
+    return this.createOutfit(
+      comb.top,
+      comb.bottom,
+      comb.shoes,
+      comb.accessories,
+      comb.avgScore,
+      blueprint,
+      totalBudget,
+      {
+        top: comb.topScore,
+        bottom: comb.bottomScore,
+        shoes: comb.shoesScore,
+        accessories: comb.accessoriesScore,
+      }
+    );
   }
 
   /**
