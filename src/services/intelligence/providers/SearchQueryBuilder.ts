@@ -44,4 +44,90 @@ export class SearchQueryBuilder {
 
     return terms.join(' ').trim();
   }
+
+  /**
+   * Generates multiple diverse, optimized search queries to retrieve a rich candidate catalog.
+   * Exploits style, fit, color, occasion, and requested items.
+   */
+  public static buildQueries(
+    blueprint: StyleBlueprint,
+    category: 'top' | 'bottom' | 'shoes' | 'accessories'
+  ): string[] {
+    // 1. Resolve canonical base category item keyword, prioritizing explicitly requested items if found
+    let categoryTerm = '';
+    if (category === 'top') {
+      const topKeywords = ['shirt', 'tshirt', 't-shirt', 'jacket', 'sweater', 'outerwear', 'hoodie', 'top'];
+      const matched = blueprint.requestedItems.find(item => 
+        topKeywords.some(keyword => item.toLowerCase().includes(keyword))
+      );
+      categoryTerm = matched ? matched.toLowerCase() : 'shirt';
+    } else if (category === 'bottom') {
+      const bottomKeywords = ['pant', 'trouser', 'jean', 'short', 'skirt', 'cargo', 'chinos'];
+      const matched = blueprint.requestedItems.find(item => 
+        bottomKeywords.some(keyword => item.toLowerCase().includes(keyword))
+      );
+      categoryTerm = matched ? matched.toLowerCase() : 'pants';
+    } else if (category === 'shoes') {
+      const shoesKeywords = ['shoe', 'boot', 'sneaker', 'loafer', 'footwear', 'sandal'];
+      const matched = blueprint.requestedItems.find(item => 
+        shoesKeywords.some(keyword => item.toLowerCase().includes(keyword))
+      );
+      categoryTerm = matched ? matched.toLowerCase() : 'shoes';
+    } else {
+      const accKeywords = ['bag', 'sunglasses', 'watch', 'belt', 'necklace', 'cap', 'wallet', 'accessory', 'accessories'];
+      const matched = blueprint.requestedItems.find(item => 
+        accKeywords.some(keyword => item.toLowerCase().includes(keyword))
+      );
+      categoryTerm = matched ? matched.toLowerCase() : 'fashion accessories';
+    }
+
+    const queries: string[] = [];
+
+    const gender = blueprint.gender ? blueprint.gender.toLowerCase() : '';
+    const genderTerm = (gender.includes('men') || gender === 'man' || gender === 'male') ? 'men' : 
+                       (gender.includes('women') || gender === 'woman' || gender === 'female') ? 'women' : '';
+    const color = blueprint.color ? blueprint.color.toLowerCase() : '';
+    const style = blueprint.style ? blueprint.style.toLowerCase() : '';
+    const fit = blueprint.fit ? blueprint.fit.toLowerCase() : '';
+    const season = blueprint.season ? blueprint.season.toLowerCase() : '';
+    const occasion = blueprint.occasion ? blueprint.occasion.toLowerCase() : '';
+
+    const buildWithTerms = (...parts: (string | undefined)[]) => {
+      // Split parts into words, normalize case, and deduplicate to avoid redundancy (e.g. 'black black shirt' -> 'black shirt')
+      const words = parts.filter(Boolean).map(p => p!.trim().toLowerCase()).flatMap(p => p.split(/\s+/));
+      return Array.from(new Set(words)).join(' ');
+    };
+
+    // Variation 1: Base query (gender + color + item)
+    queries.push(buildWithTerms(genderTerm, color, categoryTerm));
+
+    // Variation 2: Fit-focused query variation (gender + color + fit + item)
+    if (fit && fit !== 'regular') {
+      queries.push(buildWithTerms(genderTerm, color, fit, categoryTerm));
+    } else {
+      queries.push(buildWithTerms(genderTerm, color, 'relaxed', categoryTerm));
+    }
+
+    // Variation 3: Style-focused query variation (gender + color + style + item)
+    if (style && style !== 'casual') {
+      queries.push(buildWithTerms(genderTerm, color, style, categoryTerm));
+    } else {
+      queries.push(buildWithTerms(genderTerm, color, 'minimalist', categoryTerm));
+    }
+
+    // Variation 4: Occasion-focused query variation (gender + occasion + color + item)
+    if (occasion) {
+      queries.push(buildWithTerms(genderTerm, occasion, color, categoryTerm));
+    } else {
+      queries.push(buildWithTerms(genderTerm, 'casual', color, categoryTerm));
+    }
+
+    // Variation 5: Season-focused query variation (gender + season + color + item)
+    if (season) {
+      queries.push(buildWithTerms(genderTerm, season, color, categoryTerm));
+    }
+
+    // Return unique queries, removing empty strings
+    return Array.from(new Set(queries.map(q => q.trim()).filter(Boolean)));
+  }
 }

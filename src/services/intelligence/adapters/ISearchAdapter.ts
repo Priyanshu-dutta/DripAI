@@ -7,5 +7,5 @@ export interface ISearchAdapter {
   /**
    * Performs a search query against a Shopping scraper API and returns raw provider results.
    */
-  searchShopping(query: string): Promise<any[]>;
+  searchShopping(query: string, page?: number): Promise<any[]>;
 }

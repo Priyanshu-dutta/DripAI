@@ -7,7 +7,7 @@ import { EnvConfig } from '../../../config/env';
 export class SerperSearchAdapter implements ISearchAdapter {
   public readonly name = 'SerperSearchAdapter';
 
-  public async searchShopping(query: string): Promise<any[]> {
+  public async searchShopping(query: string, page?: number): Promise<any[]> {
     const apiKey = EnvConfig.getSerperApiKey();
     if (!apiKey) {
       throw new Error('SERPER_API_KEY environment variable is not defined or is set to placeholder.');
@@ -18,7 +18,7 @@ export class SerperSearchAdapter implements ISearchAdapter {
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
 
       try {
-        console.log(`[SerperSearchAdapter] Serper request sent for query: "${query}"`);
+        console.log(`[SerperSearchAdapter] Serper request sent for query: "${query}", page: ${page || 1}`);
         const response = await fetch('https://google.serper.dev/shopping', {
           method: 'POST',
           headers: {
@@ -29,6 +29,7 @@ export class SerperSearchAdapter implements ISearchAdapter {
             q: query,
             gl: 'in', // Default to India geo-target matching INR pricing
             hl: 'en',
+            ...(page ? { page } : {})
           }),
           signal: controller.signal,
         });
