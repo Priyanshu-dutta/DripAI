@@ -30,6 +30,41 @@ export async function POST(request: NextRequest) {
     // 3. Invoke preference extraction service
     const blueprint = await GeminiService.extractPreferences(sanitizedPrompt, requestId);
 
+    // Canonical gender normalizer
+    const canonicalGender = (val: string | null | undefined): 'male' | 'female' | 'unisex' | null => {
+      if (!val) return null;
+      const v = val.toLowerCase().trim();
+      if (v === 'men' || v === 'male' || v === 'mens' || v === 'men\'s' || v === 'man' || v === 'boy') return 'male';
+      if (v === 'women' || v === 'female' || v === 'ladies' || v === 'women\'s' || v === 'woman' || v === 'girl' || v === 'lady') return 'female';
+      if (v === 'unisex') return 'unisex';
+      return null;
+    };
+
+    // Extract prompt-based gender keywords
+    const parsePromptGender = (promptText: string): 'male' | 'female' | null => {
+      const promptLower = promptText.toLowerCase();
+      // Check female first to prevent substring conflicts (e.g. 'women' containing 'men')
+      if (promptLower.includes('women') || promptLower.includes('woman') || promptLower.includes('female') || promptLower.includes('ladies') || promptLower.includes('girl') || promptLower.includes('lady')) {
+        return 'female';
+      }
+      if (promptLower.includes('men') || promptLower.includes('man') || promptLower.includes('male') || promptLower.includes('boy')) {
+        return 'male';
+      }
+      return null;
+    };
+
+    // Determine resolved gender using Step 2 Priority Rules:
+    // 1. Explicit UI Selected Gender
+    // 2. Gemini Extracted Gender
+    // 3. Prompt Text inferred gender
+    // 4. Default Fallback ('unisex')
+    const uiGenderRaw = body?.filters?.gender;
+    const uiGender = canonicalGender(uiGenderRaw);
+    const geminiGender = canonicalGender(blueprint.gender);
+    const promptGender = parsePromptGender(sanitizedPrompt);
+
+    const resolvedGender = uiGender || geminiGender || promptGender || 'unisex';
+
     // Merge manual UI filters if present in request body to override/supplement AI guesses
     if (body?.filters) {
       const f = body.filters;
@@ -37,9 +72,16 @@ export async function POST(request: NextRequest) {
       if (f.budget) blueprint.budget = f.budget;
       if (f.style) blueprint.style = f.style;
       if (f.fit) blueprint.fit = f.fit;
-      if (f.gender) blueprint.gender = f.gender;
       if (f.season) blueprint.season = f.season;
     }
+
+    // Set resolved gender as the single source of truth in blueprint
+    blueprint.gender = resolvedGender;
+
+    // Populate diagnostics tracking properties
+    blueprint.promptText = sanitizedPrompt;
+    blueprint.uiGender = uiGenderRaw || null;
+    blueprint.geminiGender = geminiGender || null;
 
     // 4. Invoke Style Intelligence Engine
     const { ProductProviderFactory } = await import('../../../../services/intelligence/providers/ProductProviderFactory');

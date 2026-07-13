@@ -51,7 +51,7 @@ export interface IntelligenceProduct {
   style: string; // Lowercase, canonical style
   fit: string;   // Lowercase, canonical fit
   season: string; // Lowercase, canonical season
-  gender: 'men' | 'women' | 'unisex';
+  gender: 'male' | 'female' | 'unisex' | null;
   occasionTags: string[]; // Standardized occasion tags (lowercase)
   price: number;
   currency: string;

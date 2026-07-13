@@ -63,6 +63,13 @@ export interface StyleBlueprint {
    * This allows the frontend to dynamically prompt the user for clarification.
    */
   missingInformation: string[];
+
+  /**
+   * Diagnostics tracing fields for gender enforcement
+   */
+  promptText?: string;
+  uiGender?: string | null;
+  geminiGender?: string | null;
 }
 
 /**

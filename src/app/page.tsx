@@ -15,6 +15,7 @@ import useTrialCloset from '@/hooks/useTrialCloset';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { OutfitRecommendation, ShoppingProduct } from '@/types/stylist';
+import { StyleBlueprint } from '@/types/blueprint';
 import { MOCK_OUTFITS, MOCK_TABS } from '@/utils/mockOutfits';
 import { 
   Sparkles, 
@@ -32,6 +33,7 @@ import {
 interface BriefData {
   promptText: string;
   filters: PromptFilters;
+  blueprint?: StyleBlueprint;
 }
 
 // -----------------------------------------------------------------------------
@@ -220,7 +222,7 @@ function WorkspacePageContent() {
       const mapped = mapRecommendationsToUI(recs, blueprint);
       setRecommendations(mapped);
       setActiveOutfitId(mapped[0]?.id || null);
-      setBrief({ promptText, filters });
+      setBrief({ promptText, filters, blueprint });
     } catch (err: any) {
       console.warn('API execution failed, falling back to local simulation:', err.message || err);
       setApiAlert('Active Gemini API Key not configured. Simulated coordinates loaded.');
@@ -622,29 +624,31 @@ function WorkspacePageContent() {
                         <div className="criteria-item">
                           <span className="criteria-label">Occasion</span>
                           <span className="criteria-value" style={{ textTransform: 'capitalize' }}>
-                            {brief.filters.occasion || 'General'}
+                            {brief.blueprint?.occasion || brief.filters.occasion || 'General'}
                           </span>
                         </div>
                         <div className="criteria-item">
                           <span className="criteria-label">Budget</span>
-                          <span className="criteria-value">₹{brief.filters.budget}</span>
+                          <span className="criteria-value">
+                            {brief.blueprint ? (brief.blueprint.budget ? (brief.blueprint.budget.startsWith('₹') ? brief.blueprint.budget : `₹${brief.blueprint.budget}`) : 'No budget specified') : `₹${brief.filters.budget}`}
+                          </span>
                         </div>
                         <div className="criteria-item">
                           <span className="criteria-label">Style</span>
                           <span className="criteria-value" style={{ textTransform: 'capitalize' }}>
-                            {brief.filters.style || 'Casual'}
+                            {brief.blueprint?.style || brief.filters.style || 'Casual'}
                           </span>
                         </div>
                         <div className="criteria-item">
                           <span className="criteria-label">Fit</span>
                           <span className="criteria-value" style={{ textTransform: 'capitalize' }}>
-                            {brief.filters.fit}
+                            {brief.blueprint?.fit || brief.filters.fit}
                           </span>
                         </div>
                         <div className="criteria-item">
                           <span className="criteria-label">Gender</span>
                           <span className="criteria-value" style={{ textTransform: 'capitalize' }}>
-                            {brief.filters.gender}
+                            {brief.blueprint?.gender || brief.filters.gender}
                           </span>
                         </div>
                       </div>

@@ -64,6 +64,15 @@ export class StyleIntelligenceEngine {
       const processingTimeMs = Date.now() - startTime;
       Logger.info(`Style Intelligence Engine pipeline completed in ${processingTimeMs}ms`, requestId);
 
+      // Step 10: Log final recommendation item genders
+      console.log(`
+• Final Recommendations by Gender:
+  - Best Match:    Top: "${bestMatch.top.gender}", Bottom: "${bestMatch.bottom.gender}", Shoes: "${bestMatch.shoes.gender}", Accessories: "${bestMatch.accessories.gender}"
+  - Alternative:   Top: "${alternative.top.gender}", Bottom: "${alternative.bottom.gender}", Shoes: "${alternative.shoes.gender}", Accessories: "${alternative.accessories.gender}"
+  - Budget Friendly: Top: "${budgetFriendly.top.gender}", Bottom: "${budgetFriendly.bottom.gender}", Shoes: "${budgetFriendly.shoes.gender}", Accessories: "${budgetFriendly.accessories.gender}"
+=========================================
+      `);
+
       return {
         bestMatch,
         alternative,
@@ -98,8 +107,9 @@ export class StyleIntelligenceEngine {
     ];
 
     const bpGender = blueprint.gender ? blueprint.gender.toLowerCase().trim() : '';
-    const isFemaleQuery = bpGender === 'women' || bpGender === 'female' || bpGender === 'woman';
-    const isMaleQuery = bpGender === 'men' || bpGender === 'male' || bpGender === 'man';
+    const isFemaleQuery = bpGender === 'female' || bpGender === 'women' || bpGender === 'woman';
+    const isMaleQuery = bpGender === 'male' || bpGender === 'men' || bpGender === 'man';
+    const isUnisexQuery = bpGender === 'unisex' || !bpGender;
 
     return products.filter((p) => {
       // 1. Must be available in stock
@@ -115,11 +125,16 @@ export class StyleIntelligenceEngine {
         if (hasBlacklistedWord) return false;
       }
 
-      // 3. Gender target filter
-      if (!bpGender) return true;
-      if (p.gender === 'unisex') return true;
-      if (isMaleQuery) return p.gender === 'men';
-      if (isFemaleQuery) return p.gender === 'women';
+      // 3. Gender target filter (Strict Constraint - Phase 7)
+      if (isMaleQuery) {
+        return p.gender === 'male' || p.gender === 'unisex';
+      }
+      if (isFemaleQuery) {
+        return p.gender === 'female' || p.gender === 'unisex';
+      }
+      if (isUnisexQuery) {
+        return p.gender === 'unisex' || p.gender === 'male' || p.gender === 'female';
+      }
       return true;
     });
   }
@@ -163,6 +178,7 @@ export class StyleIntelligenceEngine {
    */
   private static findCombination(
     categories: ReturnType<typeof StyleIntelligenceEngine.rankProductsByCategory>,
+    blueprint: StyleBlueprint,
     totalBudget: number,
     mode: 'score' | 'price',
     excludeIds: Set<string> = new Set()
@@ -236,6 +252,16 @@ export class StyleIntelligenceEngine {
       for (const b of finalBList) {
         for (const s of finalSList) {
           for (const a of finalAList) {
+            // Step 8: Prevent mixed male/female outfits unless blueprint is explicitly unisex
+            const bpGender = blueprint.gender ? blueprint.gender.toLowerCase().trim() : '';
+            const isUnisexBP = bpGender === 'unisex' || !bpGender;
+            if (!isUnisexBP) {
+              const genders = [t.product.gender, b.product.gender, s.product.gender, a.product.gender];
+              if (genders.includes('male') && genders.includes('female')) {
+                continue;
+              }
+            }
+
             const cost = t.product.price + b.product.price + s.product.price + a.product.price;
             const avgScore = (t.score + b.score + s.score + a.score) / 4;
 
@@ -299,7 +325,7 @@ export class StyleIntelligenceEngine {
     blueprint: StyleBlueprint,
     totalBudget: number
   ): OutfitDefinition {
-    const comb = this.findCombination(categories, totalBudget, 'score');
+    const comb = this.findCombination(categories, blueprint, totalBudget, 'score');
 
     return this.createOutfit(
       comb.top,
@@ -327,7 +353,7 @@ export class StyleIntelligenceEngine {
     totalBudget: number
   ): OutfitDefinition {
     // Exclude the Best Match items to recommend a distinct coordinate
-    const bestMatchComb = this.findCombination(categories, totalBudget, 'score');
+    const bestMatchComb = this.findCombination(categories, blueprint, totalBudget, 'score');
     const excludeIds = new Set<string>([
       bestMatchComb.top.id,
       bestMatchComb.bottom.id,
@@ -335,7 +361,7 @@ export class StyleIntelligenceEngine {
       bestMatchComb.accessories.id,
     ]);
 
-    const comb = this.findCombination(categories, totalBudget, 'score', excludeIds);
+    const comb = this.findCombination(categories, blueprint, totalBudget, 'score', excludeIds);
 
     return this.createOutfit(
       comb.top,
@@ -363,7 +389,7 @@ export class StyleIntelligenceEngine {
     totalBudget: number
   ): OutfitDefinition {
     // Find the cheapest combination within budget
-    const comb = this.findCombination(categories, totalBudget, 'price');
+    const comb = this.findCombination(categories, blueprint, totalBudget, 'price');
 
     return this.createOutfit(
       comb.top,

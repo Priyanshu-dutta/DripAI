@@ -70,19 +70,22 @@ export class ProductNormalizer {
     // 5. Gender Target Extraction
     let rawGender = (raw.gender || raw.genderTarget || '').toLowerCase().trim();
     if (!rawGender || rawGender === 'unisex') {
-      if (titleLower.includes('women') || titleLower.includes('woman') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies')) {
-        rawGender = 'women';
-      } else if (titleLower.includes('men') || titleLower.includes('man') || titleLower.includes('male') || titleLower.includes('boy')) {
-        rawGender = 'men';
+      if (titleLower.includes('women') || titleLower.includes('woman') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies') || titleLower.includes("women's")) {
+        rawGender = 'female';
+      } else if (titleLower.includes('men') || titleLower.includes('man') || titleLower.includes('male') || titleLower.includes('boy') || titleLower.includes("men's")) {
+        rawGender = 'male';
       } else {
         rawGender = 'unisex';
       }
     }
-    let gender: 'men' | 'women' | 'unisex' = 'unisex';
-    if (rawGender.includes('women') || rawGender.includes('female') || rawGender === 'woman') {
-      gender = 'women';
-    } else if (rawGender.includes('men') || rawGender.includes('male') || rawGender === 'man') {
-      gender = 'men';
+    let gender: 'male' | 'female' | 'unisex' | null = null;
+    const gVal = rawGender.toLowerCase().trim();
+    if (gVal === 'women' || gVal === 'female' || gVal === 'ladies' || gVal === 'women\'s' || gVal === 'woman' || gVal === 'girl' || gVal === 'lady') {
+      gender = 'female';
+    } else if (gVal === 'men' || gVal === 'male' || gVal === 'mens' || gVal === 'men\'s' || gVal === 'man' || gVal === 'boy') {
+      gender = 'male';
+    } else if (gVal === 'unisex') {
+      gender = 'unisex';
     }
 
     // 6. Occasion Tags Extraction

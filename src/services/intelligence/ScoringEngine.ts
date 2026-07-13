@@ -48,11 +48,14 @@ export class ScoringEngine {
       if (!blueprint.gender || product.gender === 'unisex') {
         genderScore = 1.0;
       } else {
-        const bpGender = blueprint.gender.toLowerCase();
-        if (bpGender.includes('men') || bpGender.includes('male')) {
-          genderScore = product.gender === 'men' ? 1.0 : 0.0;
-        } else if (bpGender.includes('women') || bpGender.includes('female')) {
-          genderScore = product.gender === 'women' ? 1.0 : 0.0;
+        const bpGender = blueprint.gender.toLowerCase().trim();
+        const isFemale = bpGender === 'female' || bpGender === 'women' || bpGender === 'woman';
+        const isMale = bpGender === 'male' || bpGender === 'men' || bpGender === 'man';
+
+        if (isFemale) {
+          genderScore = product.gender === 'female' ? 1.0 : 0.0;
+        } else if (isMale) {
+          genderScore = product.gender === 'male' ? 1.0 : 0.0;
         } else {
           genderScore = 1.0;
         }

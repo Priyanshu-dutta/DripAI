@@ -231,15 +231,47 @@ export class SearchApiProvider implements IProductRepository {
       const filteredProducts = this.filterProducts(consolidatedProducts, this.blueprint!, totalBudget);
       const filteredCount = filteredProducts.length;
 
+      // Step 10 Diagnostics: Gender Counts
+      const maleProductsCount = consolidatedProducts.filter(p => p.gender === 'male').length;
+      const femaleProductsCount = consolidatedProducts.filter(p => p.gender === 'female').length;
+      const unisexProductsCount = consolidatedProducts.filter(p => p.gender === 'unisex').length;
+
+      const bpGender = this.blueprint.gender ? this.blueprint.gender.toLowerCase().trim() : '';
+      const isFemaleQuery = bpGender === 'female' || bpGender === 'women' || bpGender === 'woman';
+      const isMaleQuery = bpGender === 'male' || bpGender === 'men' || bpGender === 'man';
+
+      const genderRemovedCount = consolidatedProducts.filter(p => {
+        if (p.gender && p.gender !== 'unisex') {
+          if (isMaleQuery && p.gender === 'female') return true;
+          if (isFemaleQuery && p.gender === 'male') return true;
+        }
+        return false;
+      }).length;
+
+      const parsePromptGender = (promptText: string): 'male' | 'female' | null => {
+        const promptLower = promptText.toLowerCase();
+        if (promptLower.includes('women') || promptLower.includes('woman') || promptLower.includes('female') || promptLower.includes('ladies') || promptLower.includes('girl') || promptLower.includes('lady')) {
+          return 'female';
+        }
+        if (promptLower.includes('men') || promptLower.includes('man') || promptLower.includes('male') || promptLower.includes('boy')) {
+          return 'male';
+        }
+        return null;
+      };
+      const promptGenderVal = this.blueprint.promptText ? (parsePromptGender(this.blueprint.promptText) || 'unisex') : 'unisex';
+
       const totalTimeMs = Date.now() - startTime;
 
-      // Phase 11: Structured Logging & Diagnostics
+      // Phase 11: Structured Logging & Diagnostics (Including Step 10 requirements)
       console.log(`
 =========================================
 🔍 [SearchApiProvider] DIAGNOSTIC RETRIEVAL METRICS
 =========================================
 • Provider name:                  ${this.name}
-• Style Blueprint:                Gender: "${this.blueprint.gender}", Style: "${this.blueprint.style}", Fit: "${this.blueprint.fit}", Budget: "${this.blueprint.budget}"
+• UI Selected Gender:             "${this.blueprint.uiGender || 'none'}"
+• Prompt Gender Inferred:         "${promptGenderVal}"
+• Gemini Extracted Gender:        "${this.blueprint.geminiGender || 'none'}"
+• Final Resolved Gender:          "${this.blueprint.gender}"
 • Search queries generated:       \n  - ${diagnosticQueriesGenerated.join('\n  - ')}
 • Pages requested count:          ${diagnosticPagesRequestedCount}
 • API requests executed (misses): ${totalApiRequests} (cache hits: ${diagnosticPagesRequestedCount - totalApiRequests})
@@ -247,6 +279,10 @@ export class SearchApiProvider implements IProductRepository {
 • Products after normalization:   ${normalizedCount}
 • Products after validation:      ${validatedCount} (filtered out ${normalizedCount - validatedCount} invalid products)
 • Duplicates removed:             ${duplicatesRemoved} (consolidated to ${consolidatedCount})
+• Male Products Retrieved:        ${maleProductsCount}
+• Female Products Retrieved:      ${femaleProductsCount}
+• Unisex Products Retrieved:      ${unisexProductsCount}
+• Removed During Gender Filter:   ${genderRemovedCount}
 • Products after filtering:       ${filteredCount} (filtered out ${consolidatedCount - filteredCount} incompatible items)
 • Final products to Rec Engine:    ${filteredCount}
 • Total execution time:           ${totalTimeMs}ms
@@ -264,7 +300,7 @@ export class SearchApiProvider implements IProductRepository {
         style: p.style,
         fit: p.fit,
         season: p.season,
-        gender: p.gender,
+        gender: p.gender || undefined,
         occasionTags: p.occasionTags,
         price: p.price,
         currency: p.currency,

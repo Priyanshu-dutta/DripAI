@@ -31,7 +31,7 @@ export const PromptSection: React.FC<PromptSectionProps> = ({ onSubmit, isLoadin
     budget: '5000',
     style: 'classy',
     fit: 'oversized',
-    gender: 'unisex',
+    gender: '',
     season: 'summer'
   });
 
@@ -146,6 +146,7 @@ export const PromptSection: React.FC<PromptSectionProps> = ({ onSubmit, isLoadin
                 value={filters.gender}
                 onChange={(e) => handleFilterChange('gender', e.target.value)}
               >
+                <option value="">Auto Extract</option>
                 <option value="men">Male</option>
                 <option value="women">Female</option>
                 <option value="unisex">Unisex</option>

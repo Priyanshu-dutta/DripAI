@@ -83,9 +83,15 @@ export class SearchQueryBuilder {
 
     const queries: string[] = [];
 
-    const gender = blueprint.gender ? blueprint.gender.toLowerCase() : '';
-    const genderTerm = (gender.includes('men') || gender === 'man' || gender === 'male') ? 'men' : 
-                       (gender.includes('women') || gender === 'woman' || gender === 'female') ? 'women' : '';
+    const gender = blueprint.gender ? blueprint.gender.toLowerCase().trim() : '';
+    let genderTerm = '';
+    if (gender === 'male' || gender === 'men') {
+      genderTerm = 'men';
+    } else if (gender === 'female' || gender === 'women') {
+      genderTerm = 'women';
+    } else if (gender === 'unisex') {
+      genderTerm = 'unisex';
+    }
     const color = blueprint.color ? blueprint.color.toLowerCase() : '';
     const style = blueprint.style ? blueprint.style.toLowerCase() : '';
     const fit = blueprint.fit ? blueprint.fit.toLowerCase() : '';
