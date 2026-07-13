@@ -97,9 +97,9 @@ export class StyleIntelligenceEngine {
       'plug', 'socket', 'wire', 'converters', 'converter', 'solder', 'serial'
     ];
 
-    const bpGender = blueprint.gender ? blueprint.gender.toLowerCase() : '';
-    const isMaleQuery = bpGender.includes('men') || bpGender.includes('male') || bpGender === 'man';
-    const isFemaleQuery = bpGender.includes('women') || bpGender.includes('female') || bpGender === 'woman';
+    const bpGender = blueprint.gender ? blueprint.gender.toLowerCase().trim() : '';
+    const isFemaleQuery = bpGender === 'women' || bpGender === 'female' || bpGender === 'woman';
+    const isMaleQuery = bpGender === 'men' || bpGender === 'male' || bpGender === 'man';
 
     return products.filter((p) => {
       // 1. Must be available in stock

@@ -70,19 +70,19 @@ export class ProductNormalizer {
     // 5. Gender Target Extraction
     let rawGender = (raw.gender || raw.genderTarget || '').toLowerCase().trim();
     if (!rawGender || rawGender === 'unisex') {
-      if (titleLower.includes('men') || titleLower.includes('man') || titleLower.includes('male') || titleLower.includes('boy')) {
-        rawGender = 'men';
-      } else if (titleLower.includes('women') || titleLower.includes('woman') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies')) {
+      if (titleLower.includes('women') || titleLower.includes('woman') || titleLower.includes('female') || titleLower.includes('girl') || titleLower.includes('lady') || titleLower.includes('ladies')) {
         rawGender = 'women';
+      } else if (titleLower.includes('men') || titleLower.includes('man') || titleLower.includes('male') || titleLower.includes('boy')) {
+        rawGender = 'men';
       } else {
         rawGender = 'unisex';
       }
     }
     let gender: 'men' | 'women' | 'unisex' = 'unisex';
-    if (rawGender.includes('men') || rawGender.includes('male') || rawGender === 'man') {
-      gender = 'men';
-    } else if (rawGender.includes('women') || rawGender.includes('female') || rawGender === 'woman') {
+    if (rawGender.includes('women') || rawGender.includes('female') || rawGender === 'woman') {
       gender = 'women';
+    } else if (rawGender.includes('men') || rawGender.includes('male') || rawGender === 'man') {
+      gender = 'men';
     }
 
     // 6. Occasion Tags Extraction
